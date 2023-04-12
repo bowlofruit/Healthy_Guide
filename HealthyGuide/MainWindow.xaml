@@ -1,0 +1,26 @@
+﻿<Window x:Class="HealthyGuide.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HealthyGuide"
+        mc:Ignorable="d"
+        Title="HealthyGuideDB" Height="450" Width="800">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <ListBox x:Name="tableList" Grid.Column="1" Margin="5,5,5,55" SelectionChanged="TableList_SelectionChanged" />
+
+        <DataGrid x:Name="dataGrid" AutoGenerateColumns="True" Margin="5" />
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="5" Grid.Column="1">
+            <Button Content="+" Click="AddButton_Click" Margin="5" Height="30" Width="30" VerticalAlignment="Bottom"/>
+            <Button Content="-" Click="DeleteButton_Click" Margin="5" Height="30" Width="30" VerticalAlignment="Bottom"/>
+            <Button Content="&#xE117;" FontFamily="Segoe MDL2 Assets" Click="UpdateButton_Click" Margin="5" Height="30" Width="30" VerticalAlignment="Bottom"/>
+            <Button Content="&#xE71C;" FontFamily="Segoe MDL2 Assets" Click="FilterButton_Click" Margin="5" Height="30" Width="30" VerticalAlignment="Bottom"/>
+        </StackPanel>
+    </Grid>
+</Window>
