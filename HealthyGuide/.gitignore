@@ -1,32 +1,54 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# Visual Studio / MSBuild
 *.obj
-
-# Precompiled Headers
-*.gch
+*.pdb
+*.user
+*.aps
 *.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+*.vspscc
+*.vssscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
 *.lib
+*.sbr
+*.sdf
+ipch/
+obj/
+[Bb]in/
+[Dd]ebug*/
+[Rr]elease*/
+_ReSharper*/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.[Pp]ublish.xml
 
-# Executables
-*.exe
-*.out
-*.app
+# NuGet
+packages/
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+#!**/packages/repositories.config
+
+# Windows Azure build artifacts
+csx/
+*.build.csdef
+
+# Windows Store app package
+AppPackages/
+BundleArtifacts/
+*.appx
+
+# Other files
+[Tt]humbs.db
+*.DS_Store
+*.sln.docstates
