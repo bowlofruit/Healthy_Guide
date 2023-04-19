@@ -1,33 +1,23 @@
 ﻿using Npgsql;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
 
 namespace HealthyGuide
 {
     public partial class MainWindow : Window
     {
-        private string connString = "Server=localhost; Port=5432; Database=Culinary_guide_for_healthy_eating; User Id=postgres; Password=1234;";
-        private NpgsqlConnection conn;
+        private string connectionString = "Server=localhost; Port=5432; Database=Culinary_guide_for_healthy_eating; User Id=postgres; Password=1234;";
         private string selectedTable;
         private DataTable currentTable;
-        private string filterValue = string.Empty;
-        private string filterColumn;
 
         public MainWindow()
         {
             InitializeComponent();
-            conn = new NpgsqlConnection(connString);
             LoadTables();
-        }
-
-        private void LoadTables()
-        {
-            DataTable schema = conn.GetSchema("Tables");
-            tableList.ItemsSource = schema.Select().Select(row => row[2].ToString()).ToList();
         }
 
         private void TableList_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -50,29 +40,45 @@ namespace HealthyGuide
                 {
                     query += string.Join(" AND ", selectedRow.Row.Table.Columns.Cast<DataColumn>().Select(c => $"@{c.ColumnName} = {c.ColumnName}"));
                 }
-                NpgsqlCommand command = new NpgsqlCommand(query, conn);
-                foreach (DataColumn column in selectedRow.Row.Table.Columns)
+                using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
                 {
-                    command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
+                    conn.Open();
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
+                    {
+                        foreach (DataColumn column in selectedRow.Row.Table.Columns)
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
+                        }
+                        command.ExecuteNonQuery();
+                    }
                 }
-                conn.Open();
-                command.ExecuteNonQuery();
-                conn.Close();
             }
-
             TableView();
         }
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
+            List<string> list = new List<string>();
             DataRow newRow = currentTable.NewRow();
+            int foreignKeyCount = 0;
+
+            string query = $"INSERT INTO {selectedTable} ({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => c.ColumnName))}) VALUES";
+
             foreach (DataColumn column in currentTable.Columns)
             {
-                if(column.ColumnName != "id")
+                if (column.ColumnName != "id")
                 {
                     if (column.DataType == typeof(int) || column.DataType == typeof(double))
                     {
-                        newRow[column.ColumnName] = 1;
+                        if (column.ColumnName.Substring(column.ColumnName.Length - 2) == "id")
+                        {
+                            list.Add($"{column.ColumnName.Substring(0, column.ColumnName.Length - 2)}");
+                            foreignKeyCount++;
+                        }
+                        else
+                        {
+                            newRow[column.ColumnName] = 1;
+                        }
                     }
                     else if (column.DataType == typeof(DateTime))
                     {
@@ -84,17 +90,44 @@ namespace HealthyGuide
                     }
                 }
             }
+
+            if (foreignKeyCount > 0)
+            {
+                string choosenTables, choosenColumns;
+                if (foreignKeyCount == currentTable.Columns.Count)
+                {
+                    choosenTables = string.Join(", ", list);
+                    choosenColumns = string.Join(", ", list.Select(c => $"{c}.id"));
+                }
+                else
+                {
+                    choosenTables = $"{selectedTable}, {string.Join(", ", list.Select(c => c))}";
+                    choosenColumns = string.Join(", ", currentTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName));
+                }
+
+                DataTable resultTable = GetResultTable(list, choosenTables, choosenColumns);
+
+                if (resultTable.Rows.Count > 0)
+                {
+                    DataRow dataRow = resultTable.Rows[0];
+                    int count = 0;
+                    foreach (DataColumn column in currentTable.Columns)
+                    {
+                        newRow[column.ColumnName] = dataRow[count];
+                        count++;
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Error: there are no free values ​​for foreign keys");
+                    return;
+                }
+            }
+
             currentTable.Rows.Add(newRow);
 
-            NpgsqlCommand command = new NpgsqlCommand($"INSERT INTO {selectedTable} ({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => c.ColumnName))}) VALUES ({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => $"@{c.ColumnName}"))})", conn);
-            foreach (DataColumn column in currentTable.Columns)
-            {
-                command.Parameters.AddWithValue($"@{column.ColumnName}", newRow[column.ColumnName]);
-            }
-            conn.Open();
-            command.ExecuteNonQuery();
-            conn.Close();
-
+            query += $"({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => $"@{c.ColumnName}"))})";
+            InsertData(newRow, query);
             TableView();
         }
 
@@ -103,112 +136,100 @@ namespace HealthyGuide
             DataRowView selectedRow = (DataRowView)dataGrid.SelectedItem;
             if (selectedRow != null)
             {
-                NpgsqlCommand command = new NpgsqlCommand($"DELETE FROM {selectedTable} WHERE {string.Join(" AND ", selectedRow.Row.Table.Columns.Cast<DataColumn>().Select(c => $"@{c.ColumnName} = {c.ColumnName}"))}", conn);
-                foreach (DataColumn column in currentTable.Columns)
+                string query = $"DELETE FROM {selectedTable} WHERE {string.Join(" AND ", currentTable.Columns.Cast<DataColumn>().Select(c => $"@{c.ColumnName} = {c.ColumnName}"))}";
+                using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
                 {
-                    command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
+                    conn.Open();
+                    using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
+                    {
+                        foreach (DataColumn column in currentTable.Columns)
+                        {
+                            command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
+                        }
+                        command.ExecuteNonQuery();
+                    }
                 }
-                conn.Open();
-                command.ExecuteNonQuery();
-                conn.Close();
-
                 TableView();
             }
         }
 
-        private void TableView()
-        {
-            NpgsqlDataAdapter adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable}", conn);
-            currentTable = new DataTable();
-            adapter.Fill(currentTable);
-            dataGrid.ItemsSource = currentTable.DefaultView;
-        }
-
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-            conn.Close();
-        }
-
         private void FilterButton_Click(object sender, RoutedEventArgs e)
         {
-            StackPanel stackPanel = new StackPanel
-            {
-                Background = new SolidColorBrush(Colors.Gray),
-            };
-
-            Window window = new Window
-            {
-                Title = "Filter",
-                Width = 400,
-                Height = 400,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                Content = stackPanel
-            };
-
-            Label textLabel = new Label
-            {
-                Content = "Enter key words",
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            };
-
-            TextBox keyWords = new TextBox
-            {
-                Height = 20,
-                Width = 100,
-                HorizontalAlignment = HorizontalAlignment.Center, 
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            Label listLabel = new Label
-            {
-                Content = "Choose column",
-                VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Center,
-            };
-
-            ComboBox columnNameList = new ComboBox
-            {
-                Height = 20,
-                Width = 100,
-                SelectedIndex = 0,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center
-            };
-
-            foreach (DataColumn column in currentTable.Columns)
-            {
-                columnNameList.Items.Add(column.ColumnName);
-            }
-
-            Button filterAccept = new Button
-            {
-                Height = 30,
-                Width = 120,
-                Content = "OK",
-                HorizontalAlignment = HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Bottom
-            };
-
-            filterAccept.Click += (s, args) =>
-            {
-                filterValue = keyWords.Text;
-                filterColumn = columnNameList.SelectedValue.ToString();
-                window.Close();
-            };
-
-            stackPanel.Children.Add(textLabel);
-            stackPanel.Children.Add(keyWords);
-            stackPanel.Children.Add(listLabel);
-            stackPanel.Children.Add(columnNameList);
-            stackPanel.Children.Add(filterAccept);
+            FilterCreate filter = new FilterCreate();
+            Window window = filter.Creator(currentTable);
 
             window.ShowDialog();
 
-            NpgsqlDataAdapter adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable} WHERE {filterColumn} IN ({filterValue})", conn);
-            DataTable filterTable = new DataTable();
-            adapter.Fill(filterTable);
-            dataGrid.ItemsSource = filterTable.DefaultView;
+            TableView(filter.SelectColumn, filter.TextValue);
+        }
+
+        private void TableView(string filterColumn = null, string filterValue = null)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                NpgsqlDataAdapter adapter;
+                DataTable table = new DataTable();
+
+                if (filterColumn != null && filterValue != null)
+                {
+                    adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable} WHERE {filterColumn} IN ({filterValue})", conn);
+                    adapter.Fill(table);
+                }
+                else
+                {
+                    adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable}", conn);
+                    adapter.Fill(table);
+                    currentTable = table;
+                }
+
+                currentTable.DefaultView.Sort = currentTable.Columns[0].ColumnName + " ASC";
+                dataGrid.ItemsSource = table.DefaultView;
+            }
+        }
+
+        private void LoadTables()
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                DataTable schema = conn.GetSchema("Tables");
+                tableList.ItemsSource = schema.Select().Select(row => row[2].ToString()).ToList();
+                tableList.SelectedIndex = 0;
+            }
+        }
+
+        private void InsertData(DataRow newRow, string query)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
+                {
+                    foreach (DataColumn column in currentTable.Columns)
+                    {
+                        command.Parameters.AddWithValue($"@{column.ColumnName}", newRow[column.ColumnName]);
+                    }
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
+        private DataTable GetResultTable(List<string> list, string choosenTables, string choosenColumns)
+        {
+            var resultTable = new DataTable();
+
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                conn.Open();
+                string columnFill = $"SELECT {choosenColumns} FROM {choosenTables} WHERE NOT EXISTS (SELECT * FROM {selectedTable} WHERE {string.Join(" AND ", list.Select(c => $"{selectedTable}.{c}id = {c}.id"))})";
+                using (NpgsqlCommand command = new NpgsqlCommand(columnFill, conn))
+                {
+                    using (var adapter = new NpgsqlDataAdapter(command))
+                    {
+                        adapter.Fill(resultTable);
+                    }
+                }
+            }
+            return resultTable;
         }
     }
 }
