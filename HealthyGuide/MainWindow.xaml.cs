@@ -10,20 +10,14 @@ namespace HealthyGuide
 {
     public partial class MainWindow : Window
     {
-        private string connectionString = "Server=localhost; Port=5432; Database=Culinary_guide_for_healthy_eating; User Id=postgres; Password=1234;";
-        private string selectedTable;
+        private string connectionString = "Server=localhost; Port=5432; Database=Culinary_guide; User Id=postgres; Password=1234;";
+        private string selectedTable = "recipe";
         private DataTable currentTable;
 
         public MainWindow()
         {
             InitializeComponent();
             LoadTables();
-        }
-
-        private void TableList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            selectedTable = (string)tableList.SelectedItem;
-            TableView();
         }
 
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
@@ -192,8 +186,6 @@ namespace HealthyGuide
             using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
             {
                 DataTable schema = conn.GetSchema("Tables");
-                tableList.ItemsSource = schema.Select().Select(row => row[2].ToString()).ToList();
-                tableList.SelectedIndex = 0;
             }
         }
 
@@ -230,6 +222,20 @@ namespace HealthyGuide
                 }
             }
             return resultTable;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
+            {
+                DataTable table = new DataTable();
+                string query = "SELECT RI.headline, R.servings, R.cookingtime, R.kcal FROM recipe_info RI, recipe R WHERE R.id = RI.recipeid";
+                using (NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(query, conn))
+                {
+                    adapter.Fill(table);
+                }
+                dataGrid.ItemsSource = table.DefaultView;
+            }
         }
     }
 }
