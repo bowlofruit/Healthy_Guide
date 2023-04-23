@@ -1,241 +1,102 @@
 ﻿using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Ink;
 
 namespace HealthyGuide
 {
     public partial class MainWindow : Window
     {
-        private string connectionString = "Server=localhost; Port=5432; Database=Culinary_guide; User Id=postgres; Password=1234;";
-        private string selectedTable = "recipe";
-        private DataTable currentTable;
+        private string connectionString = "Server=localhost; Port=5432; Database=Culinary_guide; User Id=postgres; Password=Helper44x44;";
 
         public MainWindow()
         {
             InitializeComponent();
-            LoadTables();
         }
 
-        private void UpdateButton_Click(object sender, RoutedEventArgs e)
-        {
-            DataRowView selectedRow = (DataRowView)dataGrid.SelectedItem;
-            if (selectedRow != null)
-            {
-                string query = $"UPDATE {selectedTable} SET {string.Join(", ", selectedRow.Row.Table.Columns.Cast<DataColumn>().Select(c => $"{c.ColumnName} = @{c.ColumnName}"))} WHERE ";
-                if (currentTable.Columns.Contains("id"))
-                {
-                    query += $"@id = id";
-                }
-                else
-                {
-                    query += string.Join(" AND ", selectedRow.Row.Table.Columns.Cast<DataColumn>().Select(c => $"@{c.ColumnName} = {c.ColumnName}"));
-                }
-                using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-                {
-                    conn.Open();
-                    using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
-                    {
-                        foreach (DataColumn column in selectedRow.Row.Table.Columns)
-                        {
-                            command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
-                        }
-                        command.ExecuteNonQuery();
-                    }
-                }
-            }
-            TableView();
-        }
-
-        private void AddButton_Click(object sender, RoutedEventArgs e)
-        {
-            List<string> list = new List<string>();
-            DataRow newRow = currentTable.NewRow();
-            int foreignKeyCount = 0;
-
-            string query = $"INSERT INTO {selectedTable} ({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => c.ColumnName))}) VALUES";
-
-            foreach (DataColumn column in currentTable.Columns)
-            {
-                if (column.ColumnName != "id")
-                {
-                    if (column.DataType == typeof(int) || column.DataType == typeof(double))
-                    {
-                        if (column.ColumnName.Substring(column.ColumnName.Length - 2) == "id")
-                        {
-                            list.Add($"{column.ColumnName.Substring(0, column.ColumnName.Length - 2)}");
-                            foreignKeyCount++;
-                        }
-                        else
-                        {
-                            newRow[column.ColumnName] = 1;
-                        }
-                    }
-                    else if (column.DataType == typeof(DateTime))
-                    {
-                        newRow[column.ColumnName] = DateTime.Now;
-                    }
-                    else if (column.DataType == typeof(string))
-                    {
-                        newRow[column.ColumnName] = "default value";
-                    }
-                }
-            }
-
-            if (foreignKeyCount > 0)
-            {
-                string choosenTables, choosenColumns;
-                if (foreignKeyCount == currentTable.Columns.Count)
-                {
-                    choosenTables = string.Join(", ", list);
-                    choosenColumns = string.Join(", ", list.Select(c => $"{c}.id"));
-                }
-                else
-                {
-                    choosenTables = $"{selectedTable}, {string.Join(", ", list.Select(c => c))}";
-                    choosenColumns = string.Join(", ", currentTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName));
-                }
-
-                DataTable resultTable = GetResultTable(list, choosenTables, choosenColumns);
-
-                if (resultTable.Rows.Count > 0)
-                {
-                    DataRow dataRow = resultTable.Rows[0];
-                    int count = 0;
-                    foreach (DataColumn column in currentTable.Columns)
-                    {
-                        newRow[column.ColumnName] = dataRow[count];
-                        count++;
-                    }
-                }
-                else
-                {
-                    MessageBox.Show("Error: there are no free values ​​for foreign keys");
-                    return;
-                }
-            }
-
-            currentTable.Rows.Add(newRow);
-
-            query += $"({string.Join(", ", currentTable.Columns.Cast<DataColumn>().Where(c => c.ColumnName != "id").Select(c => $"@{c.ColumnName}"))})";
-            InsertData(newRow, query);
-            TableView();
-        }
-
-        private void DeleteButton_Click(object sender, RoutedEventArgs e)
-        {
-            DataRowView selectedRow = (DataRowView)dataGrid.SelectedItem;
-            if (selectedRow != null)
-            {
-                string query = $"DELETE FROM {selectedTable} WHERE {string.Join(" AND ", currentTable.Columns.Cast<DataColumn>().Select(c => $"@{c.ColumnName} = {c.ColumnName}"))}";
-                using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-                {
-                    conn.Open();
-                    using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
-                    {
-                        foreach (DataColumn column in currentTable.Columns)
-                        {
-                            command.Parameters.AddWithValue($"@{column.ColumnName}", selectedRow[column.ColumnName]);
-                        }
-                        command.ExecuteNonQuery();
-                    }
-                }
-                TableView();
-            }
-        }
-
-        private void FilterButton_Click(object sender, RoutedEventArgs e)
-        {
-            FilterCreate filter = new FilterCreate();
-            Window window = filter.Creator(currentTable);
-
-            window.ShowDialog();
-
-            TableView(filter.SelectColumn, filter.TextValue);
-        }
-
-        private void TableView(string filterColumn = null, string filterValue = null)
-        {
-            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-            {
-                NpgsqlDataAdapter adapter;
-                DataTable table = new DataTable();
-
-                if (filterColumn != null && filterValue != null)
-                {
-                    adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable} WHERE {filterColumn} IN ({filterValue})", conn);
-                    adapter.Fill(table);
-                }
-                else
-                {
-                    adapter = new NpgsqlDataAdapter($"SELECT * FROM {selectedTable}", conn);
-                    adapter.Fill(table);
-                    currentTable = table;
-                }
-
-                currentTable.DefaultView.Sort = currentTable.Columns[0].ColumnName + " ASC";
-                dataGrid.ItemsSource = table.DefaultView;
-            }
-        }
-
-        private void LoadTables()
-        {
-            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-            {
-                DataTable schema = conn.GetSchema("Tables");
-            }
-        }
-
-        private void InsertData(DataRow newRow, string query)
+        private void Recipe_Click(object sender, RoutedEventArgs e)
         {
             using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
             {
                 conn.Open();
-                using (NpgsqlCommand command = new NpgsqlCommand(query, conn))
+                string categoryQuery = "SELECT * from category";
+                using (NpgsqlCommand commCategoryQuery = new NpgsqlCommand(categoryQuery))
                 {
-                    foreach (DataColumn column in currentTable.Columns)
+                    using (NpgsqlDataReader reader = commCategoryQuery.ExecuteReader())
                     {
-                        command.Parameters.AddWithValue($"@{column.ColumnName}", newRow[column.ColumnName]);
-                    }
-                    command.ExecuteNonQuery();
-                }
-            }
-        }
+                        List<Category> categories = new List<Category>();
+                        while (reader.Read())
+                        {
+                            string recipeInfoQuery = $"SELECT RI.instruction, RI.headline, R.servings, R.cookingtime, R.kcal, C.name FROM recipeinfo ri, recipe r, recipecategory rc, category c WHERE r.id = ri.recipeid and rc.categoryid = c.id and c.id = {} and rc.recipeid = r.id "
+                            using (NpgsqlCommand commRecipeQuery = new NpgsqlCommand())
+                            {
 
-        private DataTable GetResultTable(List<string> list, string choosenTables, string choosenColumns)
-        {
-            var resultTable = new DataTable();
-
-            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-            {
-                conn.Open();
-                string columnFill = $"SELECT {choosenColumns} FROM {choosenTables} WHERE NOT EXISTS (SELECT * FROM {selectedTable} WHERE {string.Join(" AND ", list.Select(c => $"{selectedTable}.{c}id = {c}.id"))})";
-                using (NpgsqlCommand command = new NpgsqlCommand(columnFill, conn))
-                {
-                    using (var adapter = new NpgsqlDataAdapter(command))
-                    {
-                        adapter.Fill(resultTable);
+                            }
+                        }
                     }
                 }
             }
-            return resultTable;
         }
+    }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+    public class Category
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public List<RecipeInfo> RecipeInfo { get; set; }
+
+        public Category(int id, string name, List<RecipeInfo> recipeInfo)
         {
-            using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
-            {
-                DataTable table = new DataTable();
-                string query = "SELECT RI.headline, R.servings, R.cookingtime, R.kcal FROM recipe_info RI, recipe R WHERE R.id = RI.recipeid";
-                using (NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(query, conn))
-                {
-                    adapter.Fill(table);
-                }
-                dataGrid.ItemsSource = table.DefaultView;
-            }
+            Id = id;
+            Name = name;
+            RecipeInfo = recipeInfo;
+        }
+    }
+
+    public class RecipeInfo
+    {
+        public int Id { get; set; }
+        public string Headline { get; set; }
+        public string Instruction { get; set; }
+        public string Details { get; set; }
+        public List<Ingredients> Ingredients { get; set; }
+        public int Services { get; set; }
+        public int CookingTime { get; set; }
+
+        public RecipeInfo(int id, string headline, string instruction, string details, List<Ingredients> ingredients, int services, int cookingTime)
+        {
+            Id = id;
+            Headline = headline;
+            Instruction = instruction;
+            Details = details;
+            Ingredients = ingredients;
+            Services = services;
+            CookingTime = cookingTime;
+        }
+    }
+
+    public class Ingredients
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Carbohydrates { get; set; }
+        public int Fats { get; set; }
+        public int Proteins { get; set; }
+
+        public Ingredients (int id, string name, int carbohydrates, int fats, int proteins)
+        {
+            Id = id;
+            Name = name;
+            Carbohydrates = carbohydrates;
+            Fats = fats;
+            Proteins = proteins;
         }
     }
 }
