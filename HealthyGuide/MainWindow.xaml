@@ -9,13 +9,51 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="DimGray"/>
             <Setter Property="Margin" Value="5"/>
+            <Setter Property="Border.BorderThickness" Value="6"/>
             <Setter Property="Border.CornerRadius" Value="20"/>
         </Style>
+
+        <Style TargetType="DataGrid" x:Key="DataGridStyle">
+            <Setter Property="Grid.Row" Value="1"/>
+            <Setter Property="Background" Value="#2b2b2b"/>
+            <Setter Property="BorderBrush" Value="#1e1e1e"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="RowBackground" Value="#3c3c3c"/>
+            <Setter Property="AlternatingRowBackground" Value="#2b2b2b"/>
+            <Setter Property="RowHeight" Value="30"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#1e1e1e"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#1e1e1e"/>
+            <Setter Property="HeadersVisibility" Value="Column"/>
+            <Setter Property="ColumnHeaderStyle">
+                <Setter.Value>
+                    <Style TargetType="{x:Type DataGridColumnHeader}">
+                        <Setter Property="Background" Value="#2b2b2b"/>
+                        <Setter Property="Foreground" Value="#ffffff"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        <Setter Property="BorderBrush" Value="#1e1e1e"/>
+                        <Setter Property="FontWeight" Value="Bold"/>
+                        <Setter Property="Height" Value="30"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="CellStyle">
+                <Setter.Value>
+                    <Style TargetType="{x:Type DataGridCell}">
+                        <Setter Property="Foreground" Value="#ffffff"/>
+                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                        <Setter Property="BorderBrush" Value="#1e1e1e"/>
+                        <Setter Property="Padding" Value="10"/>
+                    </Style>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+
     </Window.Resources>
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"/>
+            <ColumnDefinition/>
             <ColumnDefinition Width="4*"/>
         </Grid.ColumnDefinitions>
 
@@ -24,25 +62,71 @@
                 <RowDefinition/>
                 <RowDefinition/>
                 <RowDefinition/>
+                <RowDefinition/>
                 <RowDefinition Height="3*"/>
             </Grid.RowDefinitions>
 
             <Button Grid.Row="0" Content="Recipes" Click="Recipe_Click"/>
-            <Button Grid.Row="1" Content="Users"/>
-            <Button Grid.Row="2" Content="Blogs"/>
+            <Button Grid.Row="1" Content="Users" Click="User_Click"/>
+            <Button Grid.Row="2" Content="Blogs" Click="Blogs_Click"/>
+            <Button Grid.Row="3" Content="Reviews" Click="Review_Click"/>
         </Grid>
 
-        <Grid Grid.Column="1">
-            <DataGrid x:Name="categoryDataGrid">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Name" Binding="{Binding Name}"/>
-                </DataGrid.Columns>
+        <Grid Grid.Column="1" Background="#1e1e1e">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="7*"/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0" x:Name="contentInfo" Foreground="White" FontSize="35" HorizontalAlignment="Center"/>
+            <DataGrid x:Name="categoryDataGrid" Style="{StaticResource DataGridStyle}" HeadersVisibility="None" Visibility="Hidden">
                 <DataGrid.RowDetailsTemplate>
                     <DataTemplate>
-                        <DataGrid ItemsSource="{Binding RecipeInfo}"/>
+                        <DataGrid x:Name="recipeDataGrid" ItemsSource="{Binding RecipeInfo}" AutoGenerateColumns="False" Style="{StaticResource DataGridStyle}">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Recipes" Binding="{Binding Headline}"/>
+                            </DataGrid.Columns>
+                            <DataGrid.RowDetailsTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="Ingredients List" FontSize="30" Foreground="White"/>
+                                        <DataGrid ItemsSource="{Binding Ingredients}" AutoGenerateColumns="False" Style="{StaticResource DataGridStyle}">
+                                            <DataGrid.Columns>
+                                                <DataGridHyperlinkColumn Header="Ingredient" Binding="{Binding Name}"/>
+                                                <DataGridTextColumn Header="Fats" Binding="{Binding Fats}"/>
+                                                <DataGridTextColumn Header="Proteins" Binding="{Binding Proteins}"/>
+                                                <DataGridTextColumn Header="Carbohydrates" Binding="{Binding Carbohydrates}"/>
+                                            </DataGrid.Columns>
+                                        </DataGrid>
+                                        <TextBlock Text="Instruction" FontSize="30" Foreground="White">
+                                            <LineBreak/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding Instruction}" Foreground="White" FontSize="15"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGrid.RowDetailsTemplate>
+                        </DataGrid>
                     </DataTemplate>
                 </DataGrid.RowDetailsTemplate>
             </DataGrid>
+
+            <DataGrid x:Name="usersDataGrid" Style="{StaticResource DataGridStyle}"/>
+            <DataGrid x:Name="blogsDataGrid" Style="{StaticResource DataGridStyle}"/>
+            <DataGrid x:Name="reviewDataGrid" Style="{StaticResource DataGridStyle}"/>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="7*"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+                <Button Grid.Column="1" Content="+" Click="Add_Click"/>
+                <Button Grid.Column="2"/>
+                <Button Grid.Column="3" Content="-" Click="Delete_Click"/>
+            </Grid>
         </Grid>
     </Grid>
 </Window>
