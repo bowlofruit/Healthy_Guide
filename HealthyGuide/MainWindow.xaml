@@ -120,10 +120,15 @@
                     <ColumnDefinition Width="7*"/>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
 
                 <Button Grid.Column="1" Content="+" Click="Add_Click"/>
-                <Button Grid.Column="2" Content="-" Click="Delete_Click"/>
+                <Button Grid.Column="2" Content="Filter" Click="Filter_Click"/>
+                <Button Grid.Column="3" Content="Clear" Click="FilterClear_Click"/>
+                <Button Grid.Column="4" Content="-" Click="Delete_Click"/>
+                
             </Grid>
         </Grid>
     </Grid>

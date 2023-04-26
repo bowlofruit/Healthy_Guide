@@ -1,5 +1,8 @@
 ﻿using Npgsql;
 using System.Collections.Generic;
+using System.Data;
+using System.Runtime.Remoting.Messaging;
+using System.Windows.Controls;
 
 namespace HealthyGuide.Recipes
 {
@@ -7,10 +10,12 @@ namespace HealthyGuide.Recipes
     {
         private readonly string connectionString;
         public List<Category> Categories { get; set; }
+        private string filter;
 
-        public CategoryCreator(string connectionString)
+        public CategoryCreator(string connectionString, string filter)
         {
             this.connectionString = connectionString;
+            this.filter = filter;
             Categories = FillCategory();
         }
 
@@ -35,14 +40,14 @@ namespace HealthyGuide.Recipes
             using (NpgsqlConnection conn = new NpgsqlConnection(connectionString))
             {
                 conn.Open();
-                string categoryQuery = "SELECT * from category";
+                string categoryQuery = $"SELECT * from category {filter}";
                 using (NpgsqlCommand commCategoryQuery = new NpgsqlCommand(categoryQuery, conn))
                 {
-                    using (NpgsqlDataReader categoryReader = commCategoryQuery.ExecuteReader())
+                    using (NpgsqlDataReader reader = commCategoryQuery.ExecuteReader())
                     {
-                        while (categoryReader.Read())
+                        while (reader.Read())
                         {
-                            Category category = new Category(categoryReader.GetInt32(0), categoryReader.GetString(1), new List<RecipeInfo>());
+                            Category category = new Category(reader.GetInt32(0), reader.GetString(1), new List<RecipeInfo>());
                             categories.Add(category);
                         }
                     }
