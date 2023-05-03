@@ -1,135 +1,163 @@
-﻿<Window x:Class="HealthyGuide.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="HealthyGuideDB" Width="1280" Height="720" Background="Gray">
+﻿<Window x:Class="HealthGuide.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:HealthGuide"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="750" Width="1000" WindowStartupLocation="CenterScreen">
+
+    <Window.Style>
+        <Style TargetType="{x:Type Window}">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignPaper}"/>
+            <Setter Property="Foreground" Value="{DynamicResource MaterialDesignBody}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Window}">
+                        <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                            <AdornerDecorator>
+                                <ContentPresenter />
+                            </AdornerDecorator>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Style>
 
     <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="FontSize" Value="26"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="DimGray"/>
-            <Setter Property="Margin" Value="5"/>
-            <Setter Property="Border.BorderThickness" Value="6"/>
-            <Setter Property="Border.CornerRadius" Value="20"/>
-        </Style>
-
-        <Style TargetType="DataGrid" x:Key="DataGridStyle">
-            <Setter Property="Grid.Row" Value="1"/>
-            <Setter Property="Background" Value="#2b2b2b"/>
-            <Setter Property="BorderBrush" Value="#1e1e1e"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="RowBackground" Value="#3c3c3c"/>
-            <Setter Property="AlternatingRowBackground" Value="#2b2b2b"/>
-            <Setter Property="RowHeight" Value="30"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="#1e1e1e"/>
-            <Setter Property="VerticalGridLinesBrush" Value="#1e1e1e"/>
-            <Setter Property="HeadersVisibility" Value="Column"/>
-            <Setter Property="ColumnHeaderStyle">
-                <Setter.Value>
-                    <Style TargetType="{x:Type DataGridColumnHeader}">
-                        <Setter Property="Background" Value="#2b2b2b"/>
-                        <Setter Property="Foreground" Value="#ffffff"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                        <Setter Property="BorderBrush" Value="#1e1e1e"/>
-                        <Setter Property="FontWeight" Value="Bold"/>
-                        <Setter Property="Height" Value="30"/>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="CellStyle">
-                <Setter.Value>
-                    <Style TargetType="{x:Type DataGridCell}">
-                        <Setter Property="Foreground" Value="#ffffff"/>
-                        <Setter Property="BorderThickness" Value="0,0,1,1"/>
-                        <Setter Property="BorderBrush" Value="#1e1e1e"/>
-                        <Setter Property="Padding" Value="10"/>
-                    </Style>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Dark.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignThemes.Wpf;component/Themes/MaterialDesignTheme.Defaults.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Primary/MaterialDesignColor.Grey.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MaterialDesignColors;component/Themes/Recommended/Accent/MaterialDesignColor.Lime.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
+
+
     <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="4*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="9*"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="4*"/>
+            </Grid.ColumnDefinitions>
 
-        <Grid Grid.Column="0">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition/>
-                <RowDefinition Height="3*"/>
-            </Grid.RowDefinitions>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
 
-            <Button Grid.Row="0" Content="Recipes" Click="Recipe_Click"/>
-            <Button Grid.Row="1" Content="Users" Click="User_Click"/>
-            <Button Grid.Row="2" Content="Blogs" Click="Blogs_Click"/>
-            <Button Grid.Row="3" Content="Reviews" Click="Review_Click"/>
-        </Grid>
+                <Button Grid.Row="0" Name="buttonRecipes" Content="Recipes" FontSize="28" Click="ButtonRecipes_Click" Height="60"/>
+                <Button Grid.Row="1" Name="buttonUsers" Content="Users" FontSize="28" Click="ButtonUsers_Click" Height="60"/>
+                <Button Grid.Row="2" Name="buttonBlogs" Content="Blogs" FontSize="28" Click="ButtonBlogs_Click" Height="60"/>
+                <Button Grid.Row="3" Name="buttonReviews" Content="Reviews" FontSize="28" Click="ButtonReviews_Click" Height="60"/>
 
-        <Grid Grid.Column="1" Background="#1e1e1e">
-            <Grid.RowDefinitions>
-                <RowDefinition/>
-                <RowDefinition Height="7*"/>
-                <RowDefinition/>
-            </Grid.RowDefinitions>
+            </Grid>
 
-            <TextBlock Grid.Row="0" x:Name="contentInfo" Foreground="White" FontSize="35" HorizontalAlignment="Center"/>
-            <DataGrid x:Name="categoryDataGrid" Style="{StaticResource DataGridStyle}" HeadersVisibility="None" Visibility="Hidden">
-                <DataGrid.RowDetailsTemplate>
-                    <DataTemplate>
-                        <DataGrid x:Name="recipeDataGrid" ItemsSource="{Binding RecipeInfo}" AutoGenerateColumns="False" Style="{StaticResource DataGridStyle}">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Recipes" Binding="{Binding Headline}"/>
-                            </DataGrid.Columns>
-                            <DataGrid.RowDetailsTemplate>
-                                <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="Ingredients List" FontSize="30" Foreground="White"/>
-                                        <DataGrid ItemsSource="{Binding Ingredients}" AutoGenerateColumns="False" Style="{StaticResource DataGridStyle}">
-                                            <DataGrid.Columns>
-                                                <DataGridHyperlinkColumn Header="Ingredient" Binding="{Binding Name}"/>
-                                                <DataGridTextColumn Header="Fats" Binding="{Binding Fats}"/>
-                                                <DataGridTextColumn Header="Proteins" Binding="{Binding Proteins}"/>
-                                                <DataGridTextColumn Header="Carbohydrates" Binding="{Binding Carbohydrates}"/>
-                                            </DataGrid.Columns>
-                                        </DataGrid>
-                                        <TextBlock Text="Instruction" FontSize="30" Foreground="White">
-                                            <LineBreak/>
-                                        </TextBlock>
-                                        <TextBlock Text="{Binding Instruction}" Foreground="White" FontSize="15"/>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGrid.RowDetailsTemplate>
-                        </DataGrid>
-                    </DataTemplate>
-                </DataGrid.RowDetailsTemplate>
-            </DataGrid>
+            <Grid Grid.Column="1">
 
-            <DataGrid x:Name="usersDataGrid" Style="{StaticResource DataGridStyle}"/>
-            <DataGrid x:Name="blogsDataGrid" Style="{StaticResource DataGridStyle}"/>
-            <DataGrid x:Name="reviewDataGrid" Style="{StaticResource DataGridStyle}"/>
+                <DataGrid Name="UserDataGrid" ItemsSource="{Binding UserViewModel.Items}" SelectedItem="{Binding UserViewModel.SelectedItem}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Login" Binding="{Binding Login}" />
+                    </DataGrid.Columns>
+                    <DataGrid.RowDetailsTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="Email:" FontWeight="Bold" Margin="0,10,0,0"/>
+                                <TextBlock Text="{Binding Email}"/>
+                                <TextBlock Text="Phone Number:" FontWeight="Bold" Margin="0,10,0,0"/>
+                                <TextBlock Text="{Binding PhoneNumber}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGrid.RowDetailsTemplate>
+                </DataGrid>
 
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="7*"/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                    <ColumnDefinition/>
-                </Grid.ColumnDefinitions>
 
-                <Button Grid.Column="1" Content="+" Click="Add_Click"/>
-                <Button Grid.Column="2" Content="Filter" Click="Filter_Click"/>
-                <Button Grid.Column="3" Content="Clear" Click="FilterClear_Click"/>
-                <Button Grid.Column="4" Content="-" Click="Delete_Click"/>
-                
+                <DataGrid Name="RecipeDataGrid" ItemsSource="{Binding RecipeViewModel.Items}" SelectedItem="{Binding RecipeViewModel.SelectedItem}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Title" Binding="{Binding Title}" />
+                    </DataGrid.Columns>
+                    <DataGrid.RowDetailsTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <DataGrid ItemsSource="{Binding Ingredient}"/>
+                                <TextBlock Text="Instruction:" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Instruction}" Margin="10,0,0,0" />
+                                <TextBlock Text="Servings:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding Servings}" Margin="10,0,0,0" />
+                                <TextBlock Text="CookingTime:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding CookingTime}" Margin="10,0,0,0" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGrid.RowDetailsTemplate>
+                </DataGrid>
+
+                <DataGrid Name="BlogDataGrid" ItemsSource="{Binding BlogViewModel.Items}" SelectedItem="{Binding BlogViewModel.SelectedItem}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Binding="{Binding Title}"/>
+                    </DataGrid.Columns>
+                    <DataGrid.RowDetailsTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="Author:" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Author}" Margin="10,0,0,0" />
+                                <TextBlock Text="Content:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding Content}" Margin="10,0,0,0"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGrid.RowDetailsTemplate>
+                </DataGrid>
+
+                <DataGrid Name="ReviewDataGrid" ItemsSource="{Binding ReviewViewModel.Items}" SelectedItem="{Binding ReviewViewModel.SelectedItem}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Title" Binding="{Binding Title}" />
+                    </DataGrid.Columns>
+                    <DataGrid.RowDetailsTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="Score:" FontWeight="Bold" />
+                                <TextBlock Text="{Binding Score}" Margin="10,0,0,0" />
+                                <TextBlock Text="Author:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding Author}" Margin="10,0,0,0" />
+                                <TextBlock Text="Date:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding Date}" Margin="10,0,0,0" />
+                                <TextBlock Text="Content:" FontWeight="Bold" Margin="0,10,0,0" />
+                                <TextBlock Text="{Binding Content}" Margin="10,0,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </DataGrid.RowDetailsTemplate>
+                </DataGrid>
             </Grid>
         </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="10*"/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <Button Name="buttonAdd" Grid.Column="1" Content="+" Command="{Binding AddCommand}" Margin="5"/>
+            <Button Name="buttonFilter" Grid.Column="2" Content="F" Command="{Binding FilterCommand}" Margin="5"/>
+            <Button Name="buttonFilterClear" Grid.Column="3" Content="FC" Command="{Binding FilterClearCommand}" Margin="5"/>
+            <Button Name="buttonDelete" Grid.Column="4" Content="-" Command="{Binding DeleteCommand}" CommandParameter="{Binding SelectedItem}" Margin="5"/>
+            
+        </Grid>
+        
     </Grid>
 </Window>
