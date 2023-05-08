@@ -1,15 +1,22 @@
 ﻿using HealthGuide.Models;
 using Npgsql;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace HealthGuide.ViewModels
 {
-    public class UserViewModel : BaseViewModel<User>, INotifyPropertyChanged
+    public class UserViewModel : BaseViewModel<User>
     {
+        public ICommand SelectionChangedCommand { get; private set; }
+
+        public UserViewModel() 
+        {
+            SelectionChangedCommand = new RelayCommand(UpdateActiveValue);
+        }
+
         protected override List<User> LoadTable()
         {
             string query = "SELECT * FROM Users";
@@ -87,6 +94,34 @@ namespace HealthGuide.ViewModels
                 Items = LoadTable();
             }
             window.Close();
+        }
+
+        protected override void UpdateActiveValue(object parameter)
+        {
+            if (SelectedItem is User user)
+            {
+                MessageBoxResult result = MessageBox.Show("Save changes?", "Update", MessageBoxButton.YesNo);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    string query = "UPDATE Users SET Email = @Email, Login = @Login, PhoneNumber = @PhoneNumber WHERE Id = @Id";
+
+                    using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+                    {
+                        conn.Open();
+
+                        using (NpgsqlCommand cmd = new NpgsqlCommand(query, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@Email", user.Email);
+                            cmd.Parameters.AddWithValue("@Login", user.Login);
+                            cmd.Parameters.AddWithValue("@PhoneNumber", user.PhoneNumber);
+                            cmd.Parameters.AddWithValue("@Id", user.Id);
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
         }
 
         protected override void DeleteValue(object parameter)

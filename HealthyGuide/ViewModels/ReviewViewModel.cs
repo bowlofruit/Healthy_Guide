@@ -2,14 +2,13 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
 namespace HealthGuide.ViewModels
 {
-    public class ReviewViewModel : BaseViewModel<Review>, INotifyPropertyChanged
+    public class ReviewViewModel : BaseViewModel<Review>
     {
         protected override List<Review> LoadTable()
         {
@@ -81,7 +80,7 @@ namespace HealthGuide.ViewModels
                 return;
             }
 
-            if(!Validator.IsValidDate(date))
+            if (!Validator.IsValidDate(date))
             {
                 MessageBox.Show("Invalid score");
                 return;
@@ -131,6 +130,33 @@ namespace HealthGuide.ViewModels
                     {
                         reviewCmd.Parameters.AddWithValue("@Id", review.Id);
                         reviewCmd.ExecuteNonQuery();
+                    }
+
+                    Items = LoadTable();
+                }
+            }
+        }
+
+        protected override void UpdateActiveValue(object parameter)
+        {
+            if (SelectedItem is Review review)
+            {
+                MessageBoxResult result = MessageBox.Show("Save changes?", "Update", MessageBoxButton.YesNo);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    string updateSetQuery = "UPDATE review SET name = @Name WHERE id = @Recipeid";
+
+                    using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+                    {
+                        conn.Open();
+                        using (NpgsqlCommand updateSetCmd = new NpgsqlCommand(updateSetQuery, conn))
+                        {
+                            updateSetCmd.Parameters.AddWithValue("@Name", review.Title);
+                            updateSetCmd.Parameters.AddWithValue("@Recipeid", review.Id);
+
+                            updateSetCmd.ExecuteNonQuery();
+                        }
                     }
 
                     Items = LoadTable();

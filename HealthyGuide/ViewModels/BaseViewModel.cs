@@ -16,6 +16,7 @@ namespace HealthGuide.ViewModels
         public ICommand AddCommand { get; private set; }
         public ICommand FilterCommand { get; private set; }
         public ICommand FilterClearCommand { get; private set; }
+        public ICommand UpdateCommand { get; private set; }
 
         private List<T> _items;
         public List<T> Items
@@ -38,6 +39,7 @@ namespace HealthGuide.ViewModels
             DeleteCommand = new RelayCommand(DeleteValue, CanDeleteValue);
             FilterCommand = new RelayCommand(FilterTable);
             FilterClearCommand = new RelayCommand(FiterTableClear);
+            UpdateCommand = new RelayCommand(UpdateActiveValue);
         }
 
         protected abstract List<T> LoadTable();
@@ -47,6 +49,7 @@ namespace HealthGuide.ViewModels
         protected abstract void FilterTable(object parameter);
         protected bool CanDeleteValue(object parameter) => parameter != null;
         protected void FiterTableClear(object parameter) => Items = LoadTable();
+        protected abstract void UpdateActiveValue(object parameter);
 
         protected void FilterTableToDatabase(Window window, StackPanel stackPanel)
         {
@@ -54,7 +57,7 @@ namespace HealthGuide.ViewModels
 
             string filterValue = ((TextBox)stackPanel.Children[1]).Text;
 
-            Items = LoadTable().Where(d => d.GetType().GetProperty(selectedColumn).GetValue(d, null).ToString().Contains(filterValue)).ToList();
+            Items = LoadTable().Where(d => filterValue.Split(',').Any(value => d.GetType().GetProperty(selectedColumn).GetValue(d, null).ToString().Contains(value.Trim()))).ToList();
 
             window.Close();
         }

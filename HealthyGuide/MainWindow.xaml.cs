@@ -1,9 +1,5 @@
-﻿using HealthGuide.ViewModels;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+﻿using System.ComponentModel;
 using System.Windows;
-using System.Windows.Input;
 
 namespace HealthGuide
 
@@ -30,6 +26,7 @@ namespace HealthGuide
             buttonFilter.DataContext = activeViewModel;
             buttonAdd.DataContext = activeViewModel;
             buttonFilterClear.DataContext = activeViewModel;
+            buttonUpdate.DataContext = activeViewModel;
         }
 
 

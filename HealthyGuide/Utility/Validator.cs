@@ -33,11 +33,11 @@ namespace HealthGuide
             return false;
         }
 
-        public static bool IsValidAuthor(string author, List<Review> blogs, ref int authorId)
+        public static bool IsValidAuthor(string author, List<Review> reviews, ref int authorId)
         {
             if (string.IsNullOrEmpty(author.Trim())) return false;
 
-            foreach (var blog in blogs)
+            foreach (var blog in reviews)
             {
                 if (blog.Author == author)
                 {
@@ -87,21 +87,16 @@ namespace HealthGuide
                 }
             }
 
-            if (number[0] == '+')
+            switch (number[0])
             {
-                return Regex.Match(number, @"^\+380\d{9}$").Success && unique;
-            }
-            else if (number[0] == '3')
-            {
-                return Regex.Match(number, @"^380\d{9}$").Success && unique;
-            }
-            else if (number[0] == '0')
-            {
-                return Regex.Match(number, @"^0\d{9}$").Success && unique;
-            }
-            else
-            {
-                return false;
+                case '+':
+                    return Regex.Match(number, @"^\+380\d{9}$").Success && unique;
+                case '3':
+                    return Regex.Match(number, @"^380\d{9}$").Success && unique;
+                case '0':
+                    return Regex.Match(number, @"^0\d{9}$").Success && unique;
+                default:
+                    return false;
             }
         }
 

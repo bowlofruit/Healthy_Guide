@@ -1,15 +1,13 @@
 ﻿using HealthGuide.Models;
 using Npgsql;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Markup;
 
 namespace HealthGuide.ViewModels
 {
-    public class BlogViewModel : BaseViewModel<Blog>, INotifyPropertyChanged
+    public class BlogViewModel : BaseViewModel<Blog>
     {
         protected override List<Blog> LoadTable()
         {
@@ -98,6 +96,41 @@ namespace HealthGuide.ViewModels
             }
 
             window.Close();
+        }
+
+        protected override void UpdateActiveValue(object parameter)
+        {
+            if (SelectedItem is Blog blog)
+            {
+                MessageBoxResult result = MessageBox.Show("Save changes?", "Update", MessageBoxButton.YesNo);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    string queryBlog = "UPDATE blog SET userid = @UserId, name = @Name WHERE id = @id RETURNING id";
+                    string queryBlogInfo = "UPDATE blog_info SET blogid = @BlogId, content = @Content";
+
+                    using (NpgsqlConnection conn = new NpgsqlConnection(connString))
+                    {
+                        conn.Open();
+
+                        using (NpgsqlCommand cmd = new NpgsqlCommand(queryBlog, conn))
+                        {
+                            cmd.Parameters.AddWithValue("@UserId", blog.UserId);
+                            cmd.Parameters.AddWithValue("@Name", blog.Title);
+
+                            int blogId = (int)cmd.ExecuteScalar();
+
+                            using (NpgsqlCommand cmdBlogInfo = new NpgsqlCommand(queryBlogInfo, conn))
+                            {
+                                cmdBlogInfo.Parameters.AddWithValue("@BlogId", blog.Id);
+                                cmdBlogInfo.Parameters.AddWithValue("@Content", blog.Content);
+
+                                cmdBlogInfo.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         protected override void DeleteValue(object parameter)

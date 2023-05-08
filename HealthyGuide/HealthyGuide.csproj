@@ -112,8 +112,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="RelayCommand.cs" />
-    <Compile Include="Validator.cs" />
+    <Compile Include="Utility\RelayCommand.cs" />
+    <Compile Include="Utility\Validator.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
     <Compile Include="ViewModels\BlogViewModel.cs" />
     <Compile Include="ViewModels\IngredientViewModel.cs" />
@@ -121,7 +121,7 @@
     <Compile Include="ViewModels\ReviewViewModel.cs" />
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="ViewModels\ViewModelInit.cs" />
-    <Compile Include="WindowCreator.cs" />
+    <Compile Include="Utility\WindowCreator.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
